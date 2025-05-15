@@ -1,0 +1,261 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<div class="row">
+    <div class="col-lg-8 mx-auto">
+        <div class="card mb-4 shadow">
+            <div class="card-header bg-primary bg-gradient text-white">
+                <h2 class="card-title mb-0">
+                    <i class="fas fa-camera me-2"></i>Railway Track Crack Detection
+                </h2>
+            </div>
+            <div class="card-body">
+                <div class="alert alert-info" role="alert">
+                    <i class="fas fa-info-circle me-2"></i>
+                    Upload an image of railway tracks to detect if there are any cracks present.
+                    The system will analyze the image and provide results.
+                </div>
+                
+                <!-- Upload Form -->
+                <div class="upload-section mb-4">
+                    <h4 class="mb-3">Upload Image</h4>
+                    
+                    <ul class="nav nav-tabs mb-3" id="uploadTabs" role="tablist">
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link active" id="single-upload-tab" data-bs-toggle="tab" 
+                                data-bs-target="#single-upload" type="button" role="tab" 
+                                aria-controls="single-upload" aria-selected="true">
+                                Single Image
+                            </button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="batch-upload-tab" data-bs-toggle="tab" 
+                                data-bs-target="#batch-upload" type="button" role="tab" 
+                                aria-controls="batch-upload" aria-selected="false">
+                                Batch Upload
+                            </button>
+                        </li>
+                    </ul>
+                    
+                    <div class="tab-content" id="uploadTabsContent">
+                        <!-- Single Upload Tab -->
+                        <div class="tab-pane fade show active" id="single-upload" role="tabpanel" 
+                             aria-labelledby="single-upload-tab">
+                            <form id="upload-form" enctype="multipart/form-data">
+                                <div class="mb-3">
+                                    <div class="input-group">
+                                        <input type="file" class="form-control" id="file-input" name="file" 
+                                               accept=".jpg,.jpeg,.png" required>
+                                        <button class="btn btn-primary" type="submit" id="upload-button">
+                                            <i class="fas fa-upload me-2"></i>Upload & Analyze
+                                        </button>
+                                    </div>
+                                    <div class="form-text">
+                                        Supported formats: JPG, JPEG, PNG. Max size: 16MB
+                                    </div>
+                                </div>
+                            </form>
+                            
+                            <!-- Loading Spinner -->
+                            <div id="loading-spinner" class="text-center d-none">
+                                <div class="spinner-border text-primary" role="status">
+                                    <span class="visually-hidden">Loading...</span>
+                                </div>
+                                <p class="mt-2">Analyzing image... This may take a few moments.</p>
+                            </div>
+                            
+                            <!-- Results Section (initially hidden) -->
+                            <div id="results-section" class="mt-4 d-none">
+                                <div class="card">
+                                    <div class="card-header" id="result-header">
+                                        <h5 class="mb-0" id="result-title">Analysis Results</h5>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="row">
+                                            <div class="col-md-6 mb-3">
+                                                <h6>Original Image</h6>
+                                                <div class="image-container">
+                                                    <img id="original-image" class="img-fluid rounded" alt="Original Image">
+                                                </div>
+                                            </div>
+                                            <div class="col-md-6 mb-3">
+                                                <h6>Processed Image with Detection</h6>
+                                                <div class="image-container">
+                                                    <img id="processed-image" class="img-fluid rounded" alt="Processed Image">
+                                                </div>
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="mt-3">
+                                            <div id="result-details" class="p-3 rounded">
+                                                <h5 id="result-status" class="mb-2"></h5>
+                                                <div class="progress mb-2">
+                                                    <div id="confidence-bar" class="progress-bar" role="progressbar" 
+                                                         style="width: 0%;" aria-valuemin="0" aria-valuemax="100">
+                                                        0%
+                                                    </div>
+                                                </div>
+                                                <p id="confidence-text" class="mb-0"></p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Error Message (initially hidden) -->
+                            <div id="error-message" class="alert alert-danger d-none mt-3" role="alert">
+                                <i class="fas fa-exclamation-triangle me-2"></i>
+                                <span id="error-text"></span>
+                            </div>
+                        </div>
+                        
+                        <!-- Batch Upload Tab -->
+                        <div class="tab-pane fade" id="batch-upload" role="tabpanel" 
+                             aria-labelledby="batch-upload-tab">
+                            <form id="batch-upload-form" enctype="multipart/form-data">
+                                <div class="mb-3">
+                                    <div class="input-group">
+                                        <input type="file" class="form-control" id="batch-file-input" name="files[]" 
+                                               accept=".jpg,.jpeg,.png" multiple required>
+                                        <button class="btn btn-primary" type="submit" id="batch-upload-button">
+                                            <i class="fas fa-upload me-2"></i>Upload & Analyze Batch
+                                        </button>
+                                    </div>
+                                    <div class="form-text">
+                                        Select multiple files. Supported formats: JPG, JPEG, PNG.
+                                    </div>
+                                </div>
+                            </form>
+                            
+                            <!-- Batch Loading Spinner -->
+                            <div id="batch-loading-spinner" class="text-center d-none">
+                                <div class="spinner-border text-primary" role="status">
+                                    <span class="visually-hidden">Loading...</span>
+                                </div>
+                                <p class="mt-2">Analyzing images... This may take a few moments.</p>
+                            </div>
+                            
+                            <!-- Batch Results Section (initially hidden) -->
+                            <div id="batch-results-section" class="mt-4 d-none">
+                                <h5>Batch Analysis Results</h5>
+                                <div class="table-responsive">
+                                    <table class="table table-striped table-hover">
+                                        <thead>
+                                            <tr>
+                                                <th>Image</th>
+                                                <th>Filename</th>
+                                                <th>Status</th>
+                                                <th>Confidence</th>
+                                                <th>Actions</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="batch-results-table">
+                                            <!-- Batch results will be inserted here -->
+                                        </tbody>
+                                    </table>
+                                </div>
+                                
+                                <!-- Batch Summary -->
+                                <div id="batch-summary" class="card mt-3">
+                                    <div class="card-body">
+                                        <h6>Summary</h6>
+                                        <div class="row">
+                                            <div class="col-md-4">
+                                                <div class="d-flex align-items-center">
+                                                    <div class="badge bg-danger me-2" style="width: 20px; height: 20px;"></div>
+                                                    <span>Cracked: <span id="cracked-count">0</span></span>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-4">
+                                                <div class="d-flex align-items-center">
+                                                    <div class="badge bg-success me-2" style="width: 20px; height: 20px;"></div>
+                                                    <span>Not Cracked: <span id="not-cracked-count">0</span></span>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-4">
+                                                <div class="d-flex align-items-center">
+                                                    <div class="badge bg-secondary me-2" style="width: 20px; height: 20px;"></div>
+                                                    <span>Error: <span id="error-count">0</span></span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Batch Error Message (initially hidden) -->
+                            <div id="batch-error-message" class="alert alert-danger d-none mt-3" role="alert">
+                                <i class="fas fa-exclamation-triangle me-2"></i>
+                                <span id="batch-error-text"></span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Instructions Section -->
+                <div class="instructions-section mt-4">
+                    <div class="accordion" id="instructionsAccordion">
+                        <div class="accordion-item">
+                            <h2 class="accordion-header" id="headingOne">
+                                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" 
+                                        data-bs-target="#collapseOne" aria-expanded="false" aria-controls="collapseOne">
+                                    <i class="fas fa-info-circle me-2"></i>How It Works
+                                </button>
+                            </h2>
+                            <div id="collapseOne" class="accordion-collapse collapse" aria-labelledby="headingOne" 
+                                 data-bs-parent="#instructionsAccordion">
+                                <div class="accordion-body">
+                                    <p>This system uses computer vision techniques to detect cracks in railway tracks from uploaded images:</p>
+                                    <ol>
+                                        <li>Upload a clear image of railway tracks</li>
+                                        <li>The system processes the image using advanced algorithms</li>
+                                        <li>The analysis detects anomalies and potential cracks</li>
+                                        <li>Results show whether cracks are present with confidence level</li>
+                                    </ol>
+                                    <p>For best results, upload well-lit images with good contrast and resolution.</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="accordion-item">
+                            <h2 class="accordion-header" id="headingTwo">
+                                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" 
+                                        data-bs-target="#collapseTwo" aria-expanded="false" aria-controls="collapseTwo">
+                                    <i class="fas fa-lightbulb me-2"></i>Best Practices
+                                </button>
+                            </h2>
+                            <div id="collapseTwo" class="accordion-collapse collapse" aria-labelledby="headingTwo" 
+                                 data-bs-parent="#instructionsAccordion">
+                                <div class="accordion-body">
+                                    <p>To get the most accurate results:</p>
+                                    <ul>
+                                        <li>Take clear, well-focused images of railway tracks</li>
+                                        <li>Ensure good lighting conditions</li>
+                                        <li>Capture images perpendicular to the track surface</li>
+                                        <li>Avoid excessive shadows or reflections</li>
+                                        <li>Include enough track area in the frame</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal for viewing full images -->
+<div class="modal fade" id="imageModal" tabindex="-1" aria-labelledby="imageModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="imageModalLabel">Image Viewer</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body text-center">
+                <img id="modalImage" class="img-fluid" alt="Full Image">
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
